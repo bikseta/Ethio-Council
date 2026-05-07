@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "ኢትዮ-ካውንስል",
+    "tagline": "የኢ.ወ.ቤ.ት.ኅ ብሔራዊ ዲጂታል መድረክ"
+  },
+  "nav": {
+    "dashboard": "ዳሽቦርድ",
+    "members": "አባላት",
+    "churches": "አብያተ ክርስቲያናት",
+    "reports": "ሪፖርቶች",
+    "map": "ካርታ",
+    "admin": "አስተዳደር",
+    "logout": "ውጣ"
+  },
+  "auth": {
+    "login": "ግባ",
+    "email": "ኢሜይል አድራሻ",
+    "password": "የምስጢር ቃል",
+    "loginButton": "ግባ",
+    "loginError": "ኢሜይል ወይም የምስጢር ቃል ትክክል አይደለም"
+  },
+  "dashboard": {
+    "title": "ዳሽቦርድ",
+    "totalMembers": "ጠቅላላ አባላት",
+    "totalChurches": "ጠቅላላ አብያተ ክርስቲያናት",
+    "totalDenominations": "ቤተ ክርስቲያን ማህበራት",
+    "openCrisisReports": "ክፍት የቀውስ ሪፖርቶች"
+  },
+  "members": {
+    "title": "አባላት",
+    "addMember": "አባል ጨምር",
+    "fullName": "ሙሉ ስም",
+    "gender": "ጾታ",
+    "phone": "ስልክ",
+    "status": "ሁኔታ",
+    "church": "ቤተ ክርስቲያን"
+  },
+  "churches": {
+    "title": "አብያተ ክርስቲያናት",
+    "addChurch": "ቤተ ክርስቲያን ጨምር",
+    "name": "የቤተ ክርስቲያን ስም",
+    "denomination": "ቤተ ክርስቲያን ማህበር",
+    "pastor": "ፓስተር",
+    "memberCount": "አባላት"
+  },
+  "crisis": {
+    "title": "የቀውስ ሪፖርቶች",
+    "newReport": "አዲስ ሪፖርት",
+    "severity": "ክብደት",
+    "status": "ሁኔታ",
+    "affected": "የተጎዱ",
+    "open": "ክፍት",
+    "resolved": "ተፈትቷል"
+  },
+  "common": {
+    "save": "አስቀምጥ",
+    "cancel": "ሰርዝ",
+    "delete": "ሰርዝ",
+    "edit": "አርትዕ",
+    "search": "ፈልግ",
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት ተፈጥሯል",
+    "noData": "ምንም ውሂብ የለም"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "Ethio-Council",
+    "tagline": "ECFE National Digital Platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "members": "Members",
+    "churches": "Churches",
+    "reports": "Reports",
+    "map": "Map",
+    "admin": "Administration",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "email": "Email Address",
+    "password": "Password",
+    "loginButton": "Sign In",
+    "loginError": "Invalid email or password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalMembers": "Total Members",
+    "totalChurches": "Total Churches",
+    "totalDenominations": "Denominations",
+    "openCrisisReports": "Open Crisis Reports"
+  },
+  "members": {
+    "title": "Members",
+    "addMember": "Add Member",
+    "fullName": "Full Name",
+    "gender": "Gender",
+    "phone": "Phone",
+    "status": "Status",
+    "church": "Church"
+  },
+  "churches": {
+    "title": "Churches",
+    "addChurch": "Add Church",
+    "name": "Church Name",
+    "denomination": "Denomination",
+    "pastor": "Pastor",
+    "memberCount": "Members"
+  },
+  "crisis": {
+    "title": "Crisis Reports",
+    "newReport": "New Report",
+    "severity": "Severity",
+    "status": "Status",
+    "affected": "Affected",
+    "open": "Open",
+    "resolved": "Resolved"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "noData": "No data available"
+  }
+}

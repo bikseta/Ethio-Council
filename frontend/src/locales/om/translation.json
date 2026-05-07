@@ -1,0 +1,65 @@
+{
+  "app": {
+    "name": "Ethio-Kaawunsil",
+    "tagline": "Sagantaa Dijitaalaa Biyyoolessaa ECFE"
+  },
+  "nav": {
+    "dashboard": "Dashboordii",
+    "members": "Miseensota",
+    "churches": "Waldaalee",
+    "reports": "Gabaasota",
+    "map": "Kaartaa",
+    "admin": "Bulchiinsa",
+    "logout": "Ba'i"
+  },
+  "auth": {
+    "login": "Seeni",
+    "email": "Teessoo Imeelii",
+    "password": "Jecha Iccitii",
+    "loginButton": "Seeni",
+    "loginError": "Imeelii ykn jecha iccitii dogoggoraa dha"
+  },
+  "dashboard": {
+    "title": "Dashboordii",
+    "totalMembers": "Miseensota Guutuu",
+    "totalChurches": "Waldaalee Guutuu",
+    "totalDenominations": "Waldaalee Kiristaanaa",
+    "openCrisisReports": "Gabaasa Rakkoo Banaa"
+  },
+  "members": {
+    "title": "Miseensota",
+    "addMember": "Miseensa Dabaluu",
+    "fullName": "Maqaa Guutuu",
+    "gender": "Saala",
+    "phone": "Bilbila",
+    "status": "Haala",
+    "church": "Waldaa"
+  },
+  "churches": {
+    "title": "Waldaalee",
+    "addChurch": "Waldaa Dabaluu",
+    "name": "Maqaa Waldaa",
+    "denomination": "Miseensummaa Waldaa",
+    "pastor": "Paastera",
+    "memberCount": "Miseensota"
+  },
+  "crisis": {
+    "title": "Gabaasa Rakkoo",
+    "newReport": "Gabaasa Haaraa",
+    "severity": "Hamina",
+    "status": "Haala",
+    "affected": "Miidhamtoota",
+    "open": "Banaa",
+    "resolved": "Hiikame"
+  },
+  "common": {
+    "save": "Olkaa'i",
+    "cancel": "Haquu",
+    "delete": "Balleessi",
+    "edit": "Gulaali",
+    "search": "Barbaadi",
+    "loading": "Fe'aa jira...",
+    "error": "Dogoggorri uumame",
+    "noData": "Odeeffannoo hin jiru"
+  }
+}

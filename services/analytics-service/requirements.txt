@@ -1,0 +1,12 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+pydantic==2.5.0
+pydantic-settings==2.0.3
+python-jose[cryptography]==3.3.0
+passlib[argon2]==1.7.4
+bcrypt==4.0.1
+geoalchemy2[shapely]==0.14.2
+shapely==1.8.5
+httpx==0.25.2
