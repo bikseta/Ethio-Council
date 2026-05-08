@@ -1,30 +1,51 @@
 {
-  "nav": {
-    "home": "መነሻ",
-    "churches": "የአብያተ ክርስቲያናት ማውጫ",
-    "register": "ቤተ ክርስቲያን መዝግብ",
-    "gis": "የጂአይኤስ ካርታ",
-    "analytics": "ትንታኔ",
-    "diaspora": "ዲያስፖራ",
-    "crisis": "የቀውስ ምላሽ"
-  },
-  "church": {
-    "name": "የቤተ ክርስቲያን ስም",
-    "denomination": "ቤተ ክርስቲያን ማህበር",
-    "members": "አባላት",
-    "active": "ንቁ",
-    "inactive": "ንቁ ያልሆነ"
-  },
-  "auth": {
+  "navigation": {
     "login": "ግባ",
-    "logout": "ውጣ",
-    "username": "የተጠቃሚ ስም",
+    "dashboard": "ዳሽቦርድ",
+    "churchDirectory": "የቤተ ክርስቲያን ማውጫ",
+    "churchRegistration": "የቤተ ክርስቲያን ምዝገባ",
+    "gisMap": "የጂአይኤስ ካርታ",
+    "analytics": "ትንተና",
+    "diasporaPortal": "የዲያስፖራ መድረክ",
+    "crisisResponse": "የአደጋ ምላሽ"
+  },
+  "churchFields": {
+    "name": "የቤተ ክርስቲያን ስም",
+    "denomination": "ድርጅት",
+    "community": "ማህበረሰብ",
+    "address": "አድራሻ",
+    "phone": "ስልክ",
+    "email": "ኢሜይል",
     "password": "የይለፍ ቃል"
   },
-  "common": {
-    "loading": "በመጫን ላይ...",
-    "save": "አስቀምጥ",
-    "cancel": "ሰርዝ",
-    "noData": "ምንም ውሂብ የለም"
+  "ministryTypes": {
+    "youth": "ወጣቶች",
+    "women": "ሴቶች",
+    "children": "ህፃናት",
+    "education": "ትምህርት",
+    "outreach": "ወንጌል ስርጭት"
+  },
+  "status": {
+    "pending": "በመጠባበቅ ላይ",
+    "verified": "የተረጋገጠ",
+    "active": "ንቁ",
+    "resolved": "የተፈታ"
+  },
+  "dashboard": {
+    "totalChurches": "ጠቅላላ ቤተ ክርስቲያኖች",
+    "totalMinistries": "ጠቅላላ አገልግሎቶች",
+    "regionsCovered": "የተሸፈኑ ክልሎች",
+    "activeCrises": "ንቁ ችግኝ",
+    "recentActivity": "የቅርብ እንቅስቃሴ"
+  },
+  "buttons": {
+    "login": "ግባ",
+    "logout": "ውጣ",
+    "submit": "አስገባ",
+    "requestPartnership": "አጋርነት ይጠይቁ"
+  },
+  "placeholders": {
+    "searchChurches": "ቤተ ክርስቲያኖችን በስም ይፈልጉ",
+    "loginError": "በተሰጠው መረጃ መግባት አልተቻለም"
   }
 }

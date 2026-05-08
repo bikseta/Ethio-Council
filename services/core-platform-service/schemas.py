@@ -1,197 +1,216 @@
-from datetime import datetime
-from typing import Optional
+from datetime import date, datetime
+from typing import Literal, Optional
+from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from models import UserRole
 
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 
-class UserBase(BaseModel):
-    username: str
+class LoginRequest(BaseModel):
     email: EmailStr
-    role: UserRole = UserRole.VIEWER
-
-
-class UserCreate(UserBase):
     password: str
 
 
-class UserResponse(UserBase):
-    id: int
+class RefreshRequest(BaseModel):
+    token: str
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str
+    password: str = Field(min_length=8)
+    full_name: str
+    phone: Optional[str] = None
+    role: UserRole = UserRole.VIEWER
+    language_preference: str = "en"
+    region_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
+    woreda_id: Optional[UUID] = None
+    kebele_id: Optional[UUID] = None
+
+
+class UserRead(BaseModel):
+    id: UUID
+    email: EmailStr
+    username: str
+    full_name: str
+    phone: Optional[str] = None
+    role: UserRole
     is_active: bool
+    is_verified: bool
+    language_preference: str
     created_at: datetime
+    last_login_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
-
-class RegionBase(BaseModel):
-    name: str
-    code: str
-
-
-class RegionCreate(RegionBase):
-    pass
-
-
-class RegionResponse(RegionBase):
-    id: int
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-class ZoneBase(BaseModel):
-    name: str
-    code: str
-    region_id: int
-
-
-class ZoneCreate(ZoneBase):
-    pass
-
-
-class ZoneResponse(ZoneBase):
-    id: int
-    region_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-class WoredaBase(BaseModel):
-    name: str
-    code: str
-    zone_id: int
-
-
-class WoredaCreate(WoredaBase):
-    pass
-
-
-class WoredaResponse(WoredaBase):
-    id: int
-    zone_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-class KebeleBase(BaseModel):
-    name: str
-    code: str
-    woreda_id: int
-
-
-class KebeleCreate(KebeleBase):
-    pass
-
-
-class KebeleResponse(KebeleBase):
-    id: int
-    woreda_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DenominationBase(BaseModel):
     name: str
-    code: str
+    abbreviation: Optional[str] = None
     founded_year: Optional[int] = None
+    headquarters_region_id: Optional[UUID] = None
     description: Optional[str] = None
+    website: Optional[str] = None
+    is_active: bool = True
 
 
 class DenominationCreate(DenominationBase):
     pass
 
 
-class DenominationResponse(DenominationBase):
-    id: int
-    churches_count: Optional[int] = 0
-    created_at: Optional[datetime] = None
+class DenominationUpdate(BaseModel):
+    name: Optional[str] = None
+    abbreviation: Optional[str] = None
+    founded_year: Optional[int] = None
+    headquarters_region_id: Optional[UUID] = None
+    description: Optional[str] = None
+    website: Optional[str] = None
+    is_active: Optional[bool] = None
 
-    class Config:
-        from_attributes = True
+
+class DenominationRead(DenominationBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChurchBase(BaseModel):
     name: str
-    denomination_id: int
-    woreda_id: int
+    denomination_id: UUID
+    region_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
+    woreda_id: Optional[UUID] = None
+    kebele_id: Optional[UUID] = None
+    community: Optional[str] = None
     address: Optional[str] = None
+    year_established: Optional[int] = None
+    membership_size: Optional[int] = None
+    languages_used: list[str] = []
+    service_schedules: list[dict] = []
     phone: Optional[str] = None
-    email: Optional[str] = None
-    established_year: Optional[int] = None
-    member_count: int = 0
-    is_active: bool = True
+    email: Optional[EmailStr] = None
+    website: Optional[str] = None
 
 
 class ChurchCreate(ChurchBase):
     pass
 
 
-class ChurchResponse(ChurchBase):
-    id: int
-    denomination_name: Optional[str] = None
-    woreda_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+class ChurchUpdate(BaseModel):
+    name: Optional[str] = None
+    denomination_id: Optional[UUID] = None
+    region_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
+    woreda_id: Optional[UUID] = None
+    kebele_id: Optional[UUID] = None
+    community: Optional[str] = None
+    address: Optional[str] = None
+    year_established: Optional[int] = None
+    membership_size: Optional[int] = None
+    languages_used: Optional[list[str]] = None
+    service_schedules: Optional[list[dict]] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    website: Optional[str] = None
+    is_verified: Optional[bool] = None
+    verification_status: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+
+class ChurchRead(ChurchBase):
+    id: UUID
+    is_verified: bool
+    verification_status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MinistryBase(BaseModel):
     name: str
+    church_id: Optional[UUID] = None
+    denomination_id: Optional[UUID] = None
+    ministry_type: str
     description: Optional[str] = None
-    church_id: int
-    leader_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    region_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
+    woreda_id: Optional[UUID] = None
+    kebele_id: Optional[UUID] = None
+    is_active: bool = True
 
 
 class MinistryCreate(MinistryBase):
     pass
 
 
-class MinistryResponse(MinistryBase):
-    id: int
-    church_name: Optional[str] = None
-    created_at: Optional[datetime] = None
+class MinistryUpdate(BaseModel):
+    name: Optional[str] = None
+    church_id: Optional[UUID] = None
+    denomination_id: Optional[UUID] = None
+    ministry_type: Optional[str] = None
+    description: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    region_id: Optional[UUID] = None
+    zone_id: Optional[UUID] = None
+    woreda_id: Optional[UUID] = None
+    kebele_id: Optional[UUID] = None
+    is_active: Optional[bool] = None
 
-    class Config:
-        from_attributes = True
+
+class MinistryRead(MinistryBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ChurchLeaderBase(BaseModel):
+class LeaderBase(BaseModel):
+    church_id: UUID
     full_name: str
-    title: Optional[str] = None
-    church_id: int
+    role: str
     phone: Optional[str] = None
-    email: Optional[str] = None
-    ordained_year: Optional[int] = None
+    email: Optional[EmailStr] = None
+    bio: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    is_primary: bool = False
     is_active: bool = True
 
 
-class ChurchLeaderCreate(ChurchLeaderBase):
+class LeaderCreate(LeaderBase):
     pass
 
 
-class ChurchLeaderResponse(ChurchLeaderBase):
-    id: int
-    church_name: Optional[str] = None
-    created_at: Optional[datetime] = None
+class LeaderUpdate(BaseModel):
+    church_id: Optional[UUID] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    bio: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    is_primary: Optional[bool] = None
+    is_active: Optional[bool] = None
 
-    class Config:
-        from_attributes = True
+
+class LeaderRead(LeaderBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DiasporaCommunityBase(BaseModel):
@@ -199,9 +218,10 @@ class DiasporaCommunityBase(BaseModel):
     country: str
     city: Optional[str] = None
     contact_person: Optional[str] = None
-    contact_email: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = None
-    member_count: int = 0
+    membership_count: int = 0
+    denomination_id: Optional[UUID] = None
     is_active: bool = True
 
 
@@ -209,39 +229,48 @@ class DiasporaCommunityCreate(DiasporaCommunityBase):
     pass
 
 
-class DiasporaCommunityResponse(DiasporaCommunityBase):
-    id: int
-    partnerships_count: Optional[int] = 0
-    created_at: Optional[datetime] = None
+class DiasporaCommunityUpdate(BaseModel):
+    name: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    contact_person: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    contact_phone: Optional[str] = None
+    membership_count: Optional[int] = None
+    denomination_id: Optional[UUID] = None
+    is_active: Optional[bool] = None
 
-    class Config:
-        from_attributes = True
+
+class DiasporaCommunityRead(DiasporaCommunityBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DiasporaPartnershipBase(BaseModel):
-    community_id: int
-    church_id: int
-    partnership_type: Optional[str] = None
+    diaspora_community_id: UUID
+    church_id: UUID
+    partnership_type: str
     description: Optional[str] = None
+    start_date: Optional[date] = None
+    status: str = "active"
 
 
 class DiasporaPartnershipCreate(DiasporaPartnershipBase):
     pass
 
 
-class DiasporaPartnershipResponse(DiasporaPartnershipBase):
-    id: int
-    community_name: Optional[str] = None
-    church_name: Optional[str] = None
-    is_active: bool = True
-    created_at: Optional[datetime] = None
+class DiasporaPartnershipRead(DiasporaPartnershipBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class HierarchySummary(BaseModel):
-    regions: int
-    zones: int
-    woredas: int
-    kebeles: int
+class VerifyChurchResponse(BaseModel):
+    id: UUID
+    verification_status: Literal["verified"]
+    is_verified: bool

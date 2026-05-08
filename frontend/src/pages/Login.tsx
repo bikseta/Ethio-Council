@@ -1,56 +1,44 @@
-import React, { useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Alert, Box, Button, MenuItem, Paper, Select, Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { authApi } from '../api/client';
-import { useAuthStore } from '../store/authStore';
+import { coreApi } from '../api/client';
+import { authStore } from '../store/authStore';
 
-const Login: React.FC = () => {
+const Login = () => {
+  const { i18n, t } = useTranslation();
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const [username, setUsername] = useState('admin');
+  const [email, setEmail] = useState('admin@ecfe.org');
   const [password, setPassword] = useState('Admin@2024!');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoading(true);
-    setError('');
+  const submit = async () => {
     try {
-      const loginResponse = await authApi.login(username, password);
-      const token = loginResponse.data.access_token as string;
-      const meResponse = await authApi.me(token);
-      setAuth(meResponse.data, token);
-      navigate('/dashboard');
-    } catch {
-      setError('Unable to sign in with the provided credentials.');
-    } finally {
-      setLoading(false);
+      const { data } = await coreApi.post('/auth/login', { email, password });
+      authStore.set({ token: data.access_token, email, fullName: 'ECFE User' });
+      navigate('/');
+    } catch (err) {
+      setError(t('placeholders.loginError'));
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: '#F5F7FA', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 460 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>ECFE Platform Login</Typography>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Use the scaffold seed account to access the platform.
-          </Typography>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField fullWidth margin="normal" label="Username" value={username} onChange={(event) => setUsername(event.target.value)} />
-            <TextField fullWidth margin="normal" label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-            <Button fullWidth type="submit" variant="contained" sx={{ mt: 2 }} disabled={loading}>
-              {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign In'}
-            </Button>
-          </Box>
-          <Typography variant="caption" color="text.secondary" display="block" mt={2}>
-            Seed credentials: admin / Admin@2024!
-          </Typography>
-        </CardContent>
-      </Card>
+    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
+      <Paper sx={{ p: 4, width: 420 }}>
+        <Stack spacing={2}>
+          <Typography variant="h4">{t('navigation.login')}</Typography>
+          <Select value={i18n.language.startsWith('am') ? 'am' : i18n.language.startsWith('om') ? 'om' : 'en'} onChange={(e) => i18n.changeLanguage(e.target.value)}>
+            <MenuItem value="en">English</MenuItem>
+            <MenuItem value="am">አማርኛ</MenuItem>
+            <MenuItem value="om">Afaan Oromo</MenuItem>
+          </Select>
+          {error ? <Alert severity="error">{error}</Alert> : null}
+          <TextField label={t('churchFields.email')} value={email} onChange={(e) => setEmail(e.target.value)} fullWidth />
+          <TextField label={t('churchFields.password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} fullWidth />
+          <Button variant="contained" onClick={submit}>{t('buttons.login')}</Button>
+        </Stack>
+      </Paper>
     </Box>
   );
 };

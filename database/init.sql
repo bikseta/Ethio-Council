@@ -1,425 +1,266 @@
--- ECFE Digital Platform Database Schema and Seed Data
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS postgis;
 
-DROP TABLE IF EXISTS relief_distributions CASCADE;
-DROP TABLE IF EXISTS volunteer_deployments CASCADE;
-DROP TABLE IF EXISTS volunteers CASCADE;
-DROP TABLE IF EXISTS incidents CASCADE;
-DROP TABLE IF EXISTS registration_photos CASCADE;
-DROP TABLE IF EXISTS field_registrations CASCADE;
-DROP TABLE IF EXISTS diaspora_partnerships CASCADE;
-DROP TABLE IF EXISTS diaspora_communities CASCADE;
-DROP TABLE IF EXISTS church_leaders CASCADE;
-DROP TABLE IF EXISTS ministries CASCADE;
-DROP TABLE IF EXISTS churches CASCADE;
-DROP TABLE IF EXISTS kebeles CASCADE;
-DROP TABLE IF EXISTS woredas CASCADE;
-DROP TABLE IF EXISTS zones CASCADE;
-DROP TABLE IF EXISTS regions CASCADE;
-DROP TABLE IF EXISTS denominations CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('SUPER_ADMIN', 'NATIONAL_ADMIN', 'REGIONAL_ADMIN', 'FIELD_OFFICER', 'CHURCH_LEADER', 'DIASPORA_REP', 'VIEWER');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
-DROP TYPE IF EXISTS user_role CASCADE;
-DROP TYPE IF EXISTS registration_status CASCADE;
-DROP TYPE IF EXISTS incident_severity CASCADE;
-DROP TYPE IF EXISTS incident_status CASCADE;
-DROP TYPE IF EXISTS volunteer_status CASCADE;
-
-CREATE TYPE user_role AS ENUM (
-    'SUPER_ADMIN', 'NATIONAL_ADMIN', 'REGIONAL_ADMIN',
-    'FIELD_OFFICER', 'CHURCH_LEADER', 'DIASPORA_REP', 'VIEWER'
+CREATE TABLE IF NOT EXISTS regions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20) NOT NULL UNIQUE
 );
 
-CREATE TYPE registration_status AS ENUM ('PENDING', 'VERIFIED', 'REJECTED');
-CREATE TYPE incident_severity AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
-CREATE TYPE incident_status AS ENUM ('REPORTED', 'ACTIVE', 'CONTAINED', 'RESOLVED');
-CREATE TYPE volunteer_status AS ENUM ('AVAILABLE', 'DEPLOYED', 'UNAVAILABLE');
+CREATE TABLE IF NOT EXISTS zones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE
+);
 
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS woredas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    zone_id UUID NOT NULL REFERENCES zones(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS kebeles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    woreda_id UUID NOT NULL REFERENCES woredas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(200) NOT NULL,
+    phone VARCHAR(50),
     role user_role NOT NULL DEFAULT 'VIEWER',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    is_verified BOOLEAN NOT NULL DEFAULT TRUE,
+    language_preference VARCHAR(8) NOT NULL DEFAULT 'en',
+    region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
+    zone_id UUID REFERENCES zones(id) ON DELETE SET NULL,
+    woreda_id UUID REFERENCES woredas(id) ON DELETE SET NULL,
+    kebele_id UUID REFERENCES kebeles(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_login_at TIMESTAMPTZ
 );
 
-CREATE TABLE regions (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE zones (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    region_id INTEGER NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE woredas (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    zone_id INTEGER NOT NULL REFERENCES zones(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE kebeles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    woreda_id INTEGER NOT NULL REFERENCES woredas(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE denominations (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS denominations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    abbreviation VARCHAR(50),
     founded_year INTEGER,
+    headquarters_region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
     description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    website VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE churches (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS churches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
-    denomination_id INTEGER NOT NULL REFERENCES denominations(id),
-    woreda_id INTEGER NOT NULL REFERENCES woredas(id),
+    denomination_id UUID NOT NULL REFERENCES denominations(id) ON DELETE RESTRICT,
+    region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
+    zone_id UUID REFERENCES zones(id) ON DELETE SET NULL,
+    woreda_id UUID REFERENCES woredas(id) ON DELETE SET NULL,
+    kebele_id UUID REFERENCES kebeles(id) ON DELETE SET NULL,
+    community VARCHAR(255),
     address TEXT,
+    year_established INTEGER,
+    membership_size INTEGER,
+    languages_used TEXT[] DEFAULT ARRAY[]::TEXT[],
+    service_schedules JSONB NOT NULL DEFAULT '[]'::jsonb,
     phone VARCHAR(50),
     email VARCHAR(255),
-    established_year INTEGER,
-    member_count INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    website VARCHAR(255),
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE ministries (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS ministries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
+    church_id UUID REFERENCES churches(id) ON DELETE CASCADE,
+    denomination_id UUID REFERENCES denominations(id) ON DELETE SET NULL,
+    ministry_type VARCHAR(100) NOT NULL,
     description TEXT,
-    church_id INTEGER NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
-    leader_name VARCHAR(255),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    contact_name VARCHAR(255),
+    contact_phone VARCHAR(50),
+    region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
+    zone_id UUID REFERENCES zones(id) ON DELETE SET NULL,
+    woreda_id UUID REFERENCES woredas(id) ON DELETE SET NULL,
+    kebele_id UUID REFERENCES kebeles(id) ON DELETE SET NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE church_leaders (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS church_leaders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    church_id UUID NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
     full_name VARCHAR(255) NOT NULL,
-    title VARCHAR(100),
-    church_id INTEGER NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
+    role VARCHAR(100) NOT NULL,
     phone VARCHAR(50),
     email VARCHAR(255),
-    ordained_year INTEGER,
+    bio TEXT,
+    profile_image_url VARCHAR(500),
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE diaspora_communities (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS diaspora_communities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     country VARCHAR(100) NOT NULL,
     city VARCHAR(100),
     contact_person VARCHAR(255),
     contact_email VARCHAR(255),
     contact_phone VARCHAR(50),
-    member_count INTEGER NOT NULL DEFAULT 0,
+    membership_count INTEGER NOT NULL DEFAULT 0,
+    denomination_id UUID REFERENCES denominations(id) ON DELETE SET NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE diaspora_partnerships (
-    id SERIAL PRIMARY KEY,
-    community_id INTEGER NOT NULL REFERENCES diaspora_communities(id) ON DELETE CASCADE,
-    church_id INTEGER NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
-    partnership_type VARCHAR(100),
+CREATE TABLE IF NOT EXISTS diaspora_partnerships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    diaspora_community_id UUID NOT NULL REFERENCES diaspora_communities(id) ON DELETE CASCADE,
+    church_id UUID NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
+    partnership_type VARCHAR(100) NOT NULL,
     description TEXT,
-    start_date TIMESTAMP,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    start_date DATE,
+    status VARCHAR(50) NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE field_registrations (
-    id SERIAL PRIMARY KEY,
-    church_id INTEGER NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
-    field_officer_id INTEGER NOT NULL REFERENCES users(id),
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    altitude DOUBLE PRECISION,
-    accuracy DOUBLE PRECISION,
-    address TEXT,
+CREATE TABLE IF NOT EXISTS field_registrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    church_id UUID NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
+    field_officer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    gps_lat DOUBLE PRECISION NOT NULL,
+    gps_lng DOUBLE PRECISION NOT NULL,
+    gps_accuracy DOUBLE PRECISION,
+    gps_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    location geometry(Point, 4326),
+    device_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    photos JSONB NOT NULL DEFAULT '[]'::jsonb,
+    registration_status VARCHAR(50) NOT NULL DEFAULT 'pending',
     notes TEXT,
-    status registration_status NOT NULL DEFAULT 'PENDING',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE registration_photos (
-    id SERIAL PRIMARY KEY,
-    registration_id INTEGER NOT NULL REFERENCES field_registrations(id) ON DELETE CASCADE,
-    s3_key VARCHAR(500) NOT NULL,
-    caption VARCHAR(255),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE incidents (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS incidents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(255) NOT NULL,
-    description TEXT,
-    severity incident_severity NOT NULL DEFAULT 'MEDIUM',
-    status incident_status NOT NULL DEFAULT 'REPORTED',
-    location VARCHAR(255),
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
-    reported_by INTEGER NOT NULL REFERENCES users(id),
-    woreda_id INTEGER REFERENCES woredas(id),
-    affected_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    description TEXT NOT NULL,
+    incident_type VARCHAR(100) NOT NULL,
+    severity VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'reported',
+    location geometry(Point, 4326),
+    gps_lat DOUBLE PRECISION,
+    gps_lng DOUBLE PRECISION,
+    region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
+    zone_id UUID REFERENCES zones(id) ON DELETE SET NULL,
+    woreda_id UUID REFERENCES woredas(id) ON DELETE SET NULL,
+    affected_population INTEGER,
+    reported_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE volunteers (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS volunteers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     email VARCHAR(255),
-    skills TEXT,
-    church_id INTEGER REFERENCES churches(id),
-    status volunteer_status NOT NULL DEFAULT 'AVAILABLE',
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
+    skills TEXT[] DEFAULT ARRAY[]::TEXT[],
+    availability VARCHAR(100),
+    region_id UUID REFERENCES regions(id) ON DELETE SET NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE volunteer_deployments (
-    id SERIAL PRIMARY KEY,
-    volunteer_id INTEGER NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
-    incident_id INTEGER NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
-    deployed_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    released_at TIMESTAMP,
-    notes TEXT
+CREATE TABLE IF NOT EXISTS relief_distributions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id UUID NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    quantity NUMERIC(12,2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    distribution_date DATE NOT NULL,
+    location VARCHAR(255),
+    status VARCHAR(50) NOT NULL DEFAULT 'planned',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE relief_distributions (
-    id SERIAL PRIMARY KEY,
-    incident_id INTEGER NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
-    item_name VARCHAR(255) NOT NULL,
-    quantity DOUBLE PRECISION NOT NULL,
-    unit VARCHAR(50),
-    distributed_to VARCHAR(255),
-    distributed_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    distributed_by INTEGER REFERENCES users(id),
-    notes TEXT
+CREATE TABLE IF NOT EXISTS volunteer_deployments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    incident_id UUID NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+    volunteer_id UUID NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+    role VARCHAR(100) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'assigned',
+    start_date DATE,
+    end_date DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-INSERT INTO users (username, email, hashed_password, role, is_active) VALUES
-    ('admin', 'admin@ecfe.org', '$2b$12$Sx1.LZfMzolDoX5Y7bDqTe3QZesGtYLCqsoIrIwO3lizvr.Wq4Ts6', 'SUPER_ADMIN', TRUE),
-    ('field.officer', 'field.officer@ecfe.org', '$2b$12$Sx1.LZfMzolDoX5Y7bDqTe3QZesGtYLCqsoIrIwO3lizvr.Wq4Ts6', 'FIELD_OFFICER', TRUE),
-    ('diaspora.rep', 'diaspora.rep@ecfe.org', '$2b$12$Sx1.LZfMzolDoX5Y7bDqTe3QZesGtYLCqsoIrIwO3lizvr.Wq4Ts6', 'DIASPORA_REP', TRUE);
-
-INSERT INTO denominations (name, code, founded_year, description) VALUES
-    ('Ethiopian Kale Heywet Church', 'EKHC', 1927, 'One of the largest evangelical denominations in Ethiopia.'),
-    ('Ethiopian Evangelical Church Mekane Yesus', 'EECMY', 1959, 'National Lutheran church body and ECFE member denomination.'),
-    ('Ethiopian Baptist Church Fellowship', 'EBCF', 1994, 'Baptist fellowship serving congregations across Ethiopia.'),
-    ('Ethiopian Full Gospel Believers Church', 'EFGBC', 1969, 'Pentecostal denomination with strong urban and diaspora presence.'),
-    ('Assemblies of God Ethiopia', 'AGE', 1940, 'Assemblies of God churches in Ethiopia.')
-ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO regions (name, code) VALUES
     ('Addis Ababa', 'AA'),
     ('Oromia', 'OR'),
     ('Amhara', 'AM'),
-    ('Central Ethiopia', 'CE')
+    ('SNNPR', 'SN')
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO zones (name, code, region_id) VALUES
-    ('Addis Ababa Central', 'AA-C', (SELECT id FROM regions WHERE code = 'AA')),
-    ('East Shewa', 'OR-ES', (SELECT id FROM regions WHERE code = 'OR')),
+    ('Addis Ketema Zone', 'AA-AK', (SELECT id FROM regions WHERE code = 'AA')),
+    ('Arsi Zone', 'OR-AR', (SELECT id FROM regions WHERE code = 'OR')),
     ('North Shewa', 'AM-NS', (SELECT id FROM regions WHERE code = 'AM')),
-    ('Gurage', 'CE-GU', (SELECT id FROM regions WHERE code = 'CE'))
+    ('Gamo Zone', 'SN-GA', (SELECT id FROM regions WHERE code = 'SN'))
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO woredas (name, code, zone_id) VALUES
-    ('Bole', 'AA-C-BO', (SELECT id FROM zones WHERE code = 'AA-C')),
-    ('Adama', 'OR-ES-AD', (SELECT id FROM zones WHERE code = 'OR-ES')),
-    ('Debre Birhan', 'AM-NS-DB', (SELECT id FROM zones WHERE code = 'AM-NS')),
-    ('Wolkite', 'CE-GU-WK', (SELECT id FROM zones WHERE code = 'CE-GU'))
+    ('Addis Ketema', 'AA-AK-01', (SELECT id FROM zones WHERE code = 'AA-AK')),
+    ('Asella', 'OR-AR-01', (SELECT id FROM zones WHERE code = 'OR-AR')),
+    ('Debre Birhan', 'AM-NS-01', (SELECT id FROM zones WHERE code = 'AM-NS')),
+    ('Arba Minch Zuria', 'SN-GA-01', (SELECT id FROM zones WHERE code = 'SN-GA'))
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO kebeles (name, code, woreda_id) VALUES
-    ('Bole Medhanialem', 'AA-C-BO-01', (SELECT id FROM woredas WHERE code = 'AA-C-BO')),
-    ('Adama 01', 'OR-ES-AD-01', (SELECT id FROM woredas WHERE code = 'OR-ES-AD')),
-    ('Debre Birhan 03', 'AM-NS-DB-03', (SELECT id FROM woredas WHERE code = 'AM-NS-DB')),
-    ('Wolkite 02', 'CE-GU-WK-02', (SELECT id FROM woredas WHERE code = 'CE-GU-WK'))
+    ('Kebele 01', 'AA-AK-01-01', (SELECT id FROM woredas WHERE code = 'AA-AK-01')),
+    ('Kebele 02', 'OR-AR-01-02', (SELECT id FROM woredas WHERE code = 'OR-AR-01')),
+    ('Kebele 03', 'AM-NS-01-03', (SELECT id FROM woredas WHERE code = 'AM-NS-01')),
+    ('Kebele 04', 'SN-GA-01-04', (SELECT id FROM woredas WHERE code = 'SN-GA-01'))
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO churches (name, denomination_id, woreda_id, address, phone, email, established_year, member_count, is_active) VALUES
-    (
-        'Addis Hope Church',
-        (SELECT id FROM denominations WHERE code = 'EKHC'),
-        (SELECT id FROM woredas WHERE code = 'AA-C-BO'),
-        'Bole Medhanialem, Addis Ababa',
-        '+251911000101',
-        'addis.hope@ecfe.org',
-        2005,
-        850,
-        TRUE
-    ),
-    (
-        'Adama Gospel Center',
-        (SELECT id FROM denominations WHERE code = 'EECMY'),
-        (SELECT id FROM woredas WHERE code = 'OR-ES-AD'),
-        'Adama, Oromia',
-        '+251911000102',
-        'adama.gospel@ecfe.org',
-        1998,
-        620,
-        TRUE
-    ),
-    (
-        'Debre Birhan Fellowship',
-        (SELECT id FROM denominations WHERE code = 'EBCF'),
-        (SELECT id FROM woredas WHERE code = 'AM-NS-DB'),
-        'Debre Birhan, Amhara',
-        '+251911000103',
-        'debrebirhan@ecfe.org',
-        2011,
-        410,
-        TRUE
-    ),
-    (
-        'Wolkite Revival Church',
-        (SELECT id FROM denominations WHERE code = 'EFGBC'),
-        (SELECT id FROM woredas WHERE code = 'CE-GU-WK'),
-        'Wolkite, Central Ethiopia',
-        '+251911000104',
-        'wolkite.revival@ecfe.org',
-        2014,
-        530,
-        TRUE
-    );
+INSERT INTO denominations (name, abbreviation, founded_year, headquarters_region_id, description, website) VALUES
+    ('Ethiopian Kale Heywet Church', 'EKHC', 1927, (SELECT id FROM regions WHERE code = 'AA'), 'Nationwide evangelical denomination.', 'https://www.ekhc.org'),
+    ('Ethiopian Evangelical Church Mekane Yesus', 'EECMY', 1959, (SELECT id FROM regions WHERE code = 'AA'), 'Lutheran evangelical denomination.', 'https://www.eecmy.org'),
+    ('Ethiopian Baptist Church Fellowship', 'EBCF', 1973, (SELECT id FROM regions WHERE code = 'AA'), 'Baptist fellowship serving churches across Ethiopia.', NULL),
+    ('Ethiopian Full Gospel Believers Church', 'EFGBC', 1967, (SELECT id FROM regions WHERE code = 'AA'), 'Pentecostal denomination with national presence.', NULL),
+    ('Assemblies of God Ethiopia', 'AGE', 1950, (SELECT id FROM regions WHERE code = 'AA'), 'Assemblies of God movement in Ethiopia.', NULL)
+ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO ministries (name, description, church_id, leader_name) VALUES
-    ('Youth Discipleship', 'Youth discipleship and leadership development program.', (SELECT id FROM churches WHERE name = 'Addis Hope Church'), 'Pastor Hana Bekele'),
-    ('Women Empowerment', 'Women mentorship, prayer, and economic empowerment ministry.', (SELECT id FROM churches WHERE name = 'Adama Gospel Center'), 'Sister Mulu Alemu'),
-    ('Children Outreach', 'Weekend children outreach and Sunday school support.', (SELECT id FROM churches WHERE name = 'Debre Birhan Fellowship'), 'Teacher Samuel Tadesse');
-
-INSERT INTO church_leaders (full_name, title, church_id, phone, email, ordained_year, is_active) VALUES
-    ('Rev. Hana Bekele', 'Senior Pastor', (SELECT id FROM churches WHERE name = 'Addis Hope Church'), '+251911200001', 'hana.bekele@ecfe.org', 2010, TRUE),
-    ('Rev. Daniel Girma', 'Lead Pastor', (SELECT id FROM churches WHERE name = 'Adama Gospel Center'), '+251911200002', 'daniel.girma@ecfe.org', 2006, TRUE),
-    ('Pastor Ruth Worku', 'Associate Pastor', (SELECT id FROM churches WHERE name = 'Wolkite Revival Church'), '+251911200003', 'ruth.worku@ecfe.org', 2016, TRUE);
-
-INSERT INTO diaspora_communities (name, country, city, contact_person, contact_email, contact_phone, member_count, is_active) VALUES
-    ('ECFE North America Network', 'United States', 'Washington, DC', 'Alemayehu Desta', 'na.network@ecfe.org', '+12025550101', 340, TRUE),
-    ('ECFE Europe Fellowship', 'Germany', 'Frankfurt', 'Bethlehem Fikru', 'europe.fellowship@ecfe.org', '+49695550102', 180, TRUE);
-
-INSERT INTO diaspora_partnerships (community_id, church_id, partnership_type, description, start_date, is_active) VALUES
-    (
-        (SELECT id FROM diaspora_communities WHERE name = 'ECFE North America Network'),
-        (SELECT id FROM churches WHERE name = 'Addis Hope Church'),
-        'Mission Support',
-        'Supports leadership development, literature, and youth conferences.',
-        '2023-01-15',
-        TRUE
-    ),
-    (
-        (SELECT id FROM diaspora_communities WHERE name = 'ECFE Europe Fellowship'),
-        (SELECT id FROM churches WHERE name = 'Wolkite Revival Church'),
-        'Relief Partnership',
-        'Coordinates seasonal relief fundraising and volunteer mobilization.',
-        '2024-03-01',
-        TRUE
-    );
-
-INSERT INTO field_registrations (church_id, field_officer_id, latitude, longitude, altitude, accuracy, address, notes, status) VALUES
-    (
-        (SELECT id FROM churches WHERE name = 'Addis Hope Church'),
-        (SELECT id FROM users WHERE username = 'field.officer'),
-        8.9806,
-        38.7578,
-        2355,
-        4.2,
-        'Bole Medhanialem, Addis Ababa',
-        'Verified compound and worship hall coordinates.',
-        'VERIFIED'
-    ),
-    (
-        (SELECT id FROM churches WHERE name = 'Adama Gospel Center'),
-        (SELECT id FROM users WHERE username = 'field.officer'),
-        8.5409,
-        39.2716,
-        1710,
-        5.0,
-        'Adama, Oromia',
-        'Pending media upload and frontage photo.',
-        'PENDING'
-    );
-
-INSERT INTO registration_photos (registration_id, s3_key, caption) VALUES
-    ((SELECT id FROM field_registrations WHERE address = 'Bole Medhanialem, Addis Ababa'), 'registrations/addis-hope/front.jpg', 'Front entrance'),
-    ((SELECT id FROM field_registrations WHERE address = 'Bole Medhanialem, Addis Ababa'), 'registrations/addis-hope/auditorium.jpg', 'Main auditorium');
-
-INSERT INTO incidents (title, description, severity, status, location, latitude, longitude, reported_by, woreda_id, affected_count) VALUES
-    (
-        'Displacement Support Needed',
-        'Recent displacement created urgent shelter and food needs for member households.',
-        'HIGH',
-        'ACTIVE',
-        'Adama',
-        8.5409,
-        39.2716,
-        (SELECT id FROM users WHERE username = 'admin'),
-        (SELECT id FROM woredas WHERE code = 'OR-ES-AD'),
-        95
-    ),
-    (
-        'Flood Recovery Coordination',
-        'Church compound damage and household recovery follow-up.',
-        'MEDIUM',
-        'CONTAINED',
-        'Wolkite',
-        8.2876,
-        37.7801,
-        (SELECT id FROM users WHERE username = 'admin'),
-        (SELECT id FROM woredas WHERE code = 'CE-GU-WK'),
-        44
-    );
-
-INSERT INTO volunteers (full_name, phone, email, skills, church_id, status, latitude, longitude, is_active) VALUES
-    ('Abel Terefe', '+251911300001', 'abel.terefe@ecfe.org', 'Logistics, first aid', (SELECT id FROM churches WHERE name = 'Addis Hope Church'), 'DEPLOYED', 8.9800, 38.7600, TRUE),
-    ('Saron Negash', '+251911300002', 'saron.negash@ecfe.org', 'Counselling, child support', (SELECT id FROM churches WHERE name = 'Adama Gospel Center'), 'AVAILABLE', 8.5410, 39.2710, TRUE),
-    ('Mekonnen Bulti', '+251911300003', 'mekonnen.bulti@ecfe.org', 'Distribution management', (SELECT id FROM churches WHERE name = 'Wolkite Revival Church'), 'AVAILABLE', 8.2870, 37.7800, TRUE);
-
-INSERT INTO volunteer_deployments (volunteer_id, incident_id, notes) VALUES
-    (
-        (SELECT id FROM volunteers WHERE email = 'abel.terefe@ecfe.org'),
-        (SELECT id FROM incidents WHERE title = 'Displacement Support Needed'),
-        'Assigned as field logistics coordinator.'
-    );
-
-INSERT INTO relief_distributions (incident_id, item_name, quantity, unit, distributed_to, distributed_by, notes) VALUES
-    (
-        (SELECT id FROM incidents WHERE title = 'Displacement Support Needed'),
-        'Emergency Food Kit',
-        120,
-        'kits',
-        '95 displaced households',
-        (SELECT id FROM users WHERE username = 'admin'),
-        'Distributed through church coordination center.'
-    ),
-    (
-        (SELECT id FROM incidents WHERE title = 'Flood Recovery Coordination'),
-        'Blankets',
-        70,
-        'pieces',
-        'Flood-affected families',
-        (SELECT id FROM users WHERE username = 'admin'),
-        'Priority distribution for elderly households.'
-    );
+INSERT INTO users (email, username, password_hash, full_name, role, is_active, is_verified, language_preference)
+VALUES ('admin@ecfe.org', 'admin', '$2b$12$y5Cd5/Dydt.KL.f33vS8ieekBVRzEtCXFtHz4Bzdk1uDt0p6VS4/S', 'ECFE Platform Administrator', 'SUPER_ADMIN', TRUE, TRUE, 'en')
+ON CONFLICT (email) DO NOTHING;

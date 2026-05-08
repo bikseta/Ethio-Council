@@ -1,39 +1,38 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
-from models import RegistrationStatus
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
 
 
-class FieldRegistrationBase(BaseModel):
-    church_id: int
-    field_officer_id: int
-    latitude: float
-    longitude: float
-    altitude: Optional[float] = None
-    accuracy: Optional[float] = None
-    address: Optional[str] = None
+class FieldRegistrationCreate(BaseModel):
+    church_id: UUID
+    field_officer_id: UUID
+    gps_lat: float
+    gps_lng: float
+    gps_accuracy: Optional[float] = None
+    device_metadata: dict = {}
     notes: Optional[str] = None
 
 
-class FieldRegistrationCreate(FieldRegistrationBase):
-    pass
-
-
-class FieldRegistrationResponse(FieldRegistrationBase):
-    id: int
-    status: RegistrationStatus
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class RegistrationPhotoResponse(BaseModel):
-    id: int
-    registration_id: int
-    s3_key: str
+class PhotoUploadRequest(BaseModel):
+    photo_url: str
     caption: Optional[str] = None
-    created_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class FieldRegistrationRead(BaseModel):
+    id: UUID
+    church_id: UUID
+    field_officer_id: UUID
+    gps_lat: float
+    gps_lng: float
+    gps_accuracy: Optional[float] = None
+    gps_timestamp: datetime
+    device_metadata: dict
+    photos: list
+    registration_status: str
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

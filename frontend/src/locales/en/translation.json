@@ -1,30 +1,51 @@
 {
-  "nav": {
-    "home": "Home",
-    "churches": "Church Directory",
-    "register": "Register Church",
-    "gis": "GIS Map",
-    "analytics": "Analytics",
-    "diaspora": "Diaspora",
-    "crisis": "Crisis Response"
-  },
-  "church": {
-    "name": "Church Name",
-    "denomination": "Denomination",
-    "members": "Members",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-  "auth": {
+  "navigation": {
     "login": "Login",
-    "logout": "Logout",
-    "username": "Username",
+    "dashboard": "Dashboard",
+    "churchDirectory": "Church Directory",
+    "churchRegistration": "Church Registration",
+    "gisMap": "GIS Map",
+    "analytics": "Analytics",
+    "diasporaPortal": "Diaspora Portal",
+    "crisisResponse": "Crisis Response"
+  },
+  "churchFields": {
+    "name": "Church name",
+    "denomination": "Denomination",
+    "community": "Community",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
     "password": "Password"
   },
-  "common": {
-    "loading": "Loading...",
-    "save": "Save",
-    "cancel": "Cancel",
-    "noData": "No data available"
+  "ministryTypes": {
+    "youth": "Youth",
+    "women": "Women",
+    "children": "Children",
+    "education": "Education",
+    "outreach": "Outreach"
+  },
+  "status": {
+    "pending": "Pending",
+    "verified": "Verified",
+    "active": "Active",
+    "resolved": "Resolved"
+  },
+  "dashboard": {
+    "totalChurches": "Total churches",
+    "totalMinistries": "Total ministries",
+    "regionsCovered": "Regions covered",
+    "activeCrises": "Active crises",
+    "recentActivity": "Recent activity"
+  },
+  "buttons": {
+    "login": "Sign in",
+    "logout": "Logout",
+    "submit": "Submit",
+    "requestPartnership": "Request partnership"
+  },
+  "placeholders": {
+    "searchChurches": "Search churches by name",
+    "loginError": "Unable to sign in with the provided credentials"
   }
 }

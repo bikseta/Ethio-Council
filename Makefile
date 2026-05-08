@@ -1,20 +1,25 @@
-.PHONY: up down build logs validate shell-db
+.PHONY: up down logs build db-init migrate shell-core shell-db
 
 up:
-	docker-compose up -d --build
+	docker-compose up -d
 
 down:
 	docker-compose down
 
+logs:
+	docker-compose logs -f
+
 build:
 	docker-compose build
 
-logs:
-	docker-compose logs --tail=200
+db-init:
+	docker-compose exec postgres psql -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-ethio_council} -f /docker-entrypoint-initdb.d/init.sql
 
-validate:
-	python -m compileall services
-	cd frontend && npm run build
+migrate:
+	docker-compose exec core-platform-service alembic upgrade head
+
+shell-core:
+	docker-compose exec core-platform-service /bin/sh
 
 shell-db:
-	docker-compose exec db psql -U ecfe_user -d ecfe_db
+	docker-compose exec postgres psql -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-ethio_council}

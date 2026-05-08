@@ -1,56 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { useTranslation } from 'react-i18next';
 
-import { churchesApi } from '../api/client';
+import { coreApi } from '../api/client';
 
-interface Church {
-  id: number;
-  name: string;
-  denomination_name?: string;
-  woreda_name?: string;
-  member_count: number;
-  address?: string;
-  is_active: boolean;
-}
+const columns: GridColDef[] = [
+  { field: 'name', headerName: 'Church', flex: 1.4 },
+  { field: 'community', headerName: 'Community', flex: 1 },
+  { field: 'membership_size', headerName: 'Members', flex: 0.8 },
+  { field: 'verification_status', headerName: 'Status', flex: 0.8 },
+];
 
-const ChurchDirectory: React.FC = () => {
-  const [churches, setChurches] = useState<Church[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const ChurchDirectory = () => {
+  const { t } = useTranslation();
+  const [rows, setRows] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    churchesApi.list()
-      .then((response) => setChurches(response.data))
-      .catch(() => setError('Unable to load churches.'))
-      .finally(() => setLoading(false));
+    coreApi.get('/churches').then(({ data }) => setRows(data)).catch(() => undefined);
   }, []);
 
-  if (loading) {
-    return <CircularProgress />;
-  }
+  const filtered = rows.filter((row) => row.name?.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>Church Directory</Typography>
-      <Typography variant="body2" color="text.secondary" mb={3}>
-        Browse seeded ECFE churches by denomination and woreda.
-      </Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-        {churches.map((church) => (
-          <Card key={church.id}>
-            <CardContent>
-              <Typography variant="h6">{church.name}</Typography>
-              <Typography color="text.secondary">{church.denomination_name || 'Denomination unavailable'}</Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>{church.woreda_name || 'Unknown woreda'}</Typography>
-              <Typography variant="body2">Members: {church.member_count}</Typography>
-              {church.address && <Typography variant="body2">{church.address}</Typography>}
-              <Chip label={church.is_active ? 'Active' : 'Inactive'} color={church.is_active ? 'success' : 'default'} size="small" sx={{ mt: 1 }} />
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-    </Box>
+    <Stack spacing={3}>
+      <Typography variant="h4">{t('navigation.churchDirectory')}</Typography>
+      <Card>
+        <CardContent>
+          <Stack spacing={2}>
+            <TextField value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('placeholders.searchChurches')} />
+            <div style={{ height: 520, width: '100%' }}>
+              <DataGrid rows={filtered} columns={columns} getRowId={(row) => row.id} disableRowSelectionOnClick />
+            </div>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
   );
 };
 

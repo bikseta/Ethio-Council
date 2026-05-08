@@ -1,71 +1,57 @@
-import React from 'react';
-import { BrowserRouter as Router, Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import { Box, ThemeProvider, createTheme } from '@mui/material';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Box, CssBaseline, Toolbar } from '@mui/material';
 
 import Navbar from './components/Layout/Navbar';
 import Sidebar from './components/Layout/Sidebar';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminHierarchy from './pages/AdminHierarchy';
-import Analytics from './pages/Analytics';
+import Dashboard from './pages/Dashboard';
 import ChurchDirectory from './pages/ChurchDirectory';
 import ChurchRegistration from './pages/ChurchRegistration';
-import CrisisResponse from './pages/CrisisResponse';
-import Denominations from './pages/Denominations';
-import DiasporaPortal from './pages/DiasporaPortal';
 import GISMap from './pages/GISMap';
-import Leaders from './pages/Leaders';
+import Analytics from './pages/Analytics';
+import DiasporaPortal from './pages/DiasporaPortal';
+import CrisisResponse from './pages/CrisisResponse';
 import Login from './pages/Login';
-import Ministries from './pages/Ministries';
 import NotFound from './pages/NotFound';
+import theme from './theme';
+import { ThemeProvider } from '@mui/material/styles';
+import { authStore } from './store/authStore';
 
-const theme = createTheme({
-  palette: {
-    primary: { main: '#1565C0' },
-    secondary: { main: '#2E7D32' },
-    background: { default: '#F5F7FA' },
-  },
-});
-
-const AppShell: React.FC = () => (
-  <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-    <Sidebar />
-    <Box sx={{ flex: 1, ml: '260px' }}>
+const PrivateLayout = () => {
+  const auth = authStore.get();
+  if (!auth.token) {
+    return <Navigate to="/login" replace />;
+  }
+  return (
+    <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
       <Navbar />
-      <Box component="main" sx={{ p: 3 }}>
+      <Sidebar />
+      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: '260px' }}>
+        <Toolbar />
         <Outlet />
       </Box>
     </Box>
-  </Box>
-);
-
-const App: React.FC = () => {
-  return (
-    <ThemeProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Analytics />} />
-              <Route path="/churches" element={<ChurchDirectory />} />
-              <Route path="/churches/register" element={<ChurchRegistration />} />
-              <Route path="/denominations" element={<Denominations />} />
-              <Route path="/ministries" element={<Ministries />} />
-              <Route path="/leaders" element={<Leaders />} />
-              <Route path="/hierarchy" element={<AdminHierarchy />} />
-              <Route path="/diaspora" element={<DiasporaPortal />} />
-              <Route path="/gis-registration" element={<GISMap />} />
-              <Route path="/gis" element={<Navigate to="/gis-registration" replace />} />
-              <Route path="/crisis-response" element={<CrisisResponse />} />
-              <Route path="/crisis" element={<Navigate to="/crisis-response" replace />} />
-            </Route>
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
   );
 };
+
+const App = () => (
+  <ThemeProvider theme={theme}>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route element={<PrivateLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/churches" element={<ChurchDirectory />} />
+          <Route path="/church-registration" element={<ChurchRegistration />} />
+          <Route path="/gis" element={<GISMap />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/diaspora" element={<DiasporaPortal />} />
+          <Route path="/crisis-response" element={<CrisisResponse />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  </ThemeProvider>
+);
 
 export default App;

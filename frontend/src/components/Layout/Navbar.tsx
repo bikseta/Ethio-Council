@@ -1,30 +1,25 @@
-import React from 'react';
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, MenuItem, Select, Toolbar, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { useAuthStore } from '../../store/authStore';
+import { authStore } from '../../store/authStore';
 
-const Navbar: React.FC = () => {
+const Navbar = () => {
+  const { i18n, t } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   return (
-    <AppBar position="sticky" sx={{ zIndex: 1300 }}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-          ECFE Platform
-        </Typography>
-        {isAuthenticated && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2">{user?.username} · {user?.role}</Typography>
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
-          </Box>
-        )}
+    <AppBar position="sticky" sx={{ zIndex: 1201 }}>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Typography variant="h6">ECFE Digital Platform</Typography>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Select size="small" value={i18n.language.startsWith('am') ? 'am' : i18n.language.startsWith('om') ? 'om' : 'en'} onChange={(event) => i18n.changeLanguage(event.target.value)}>
+            <MenuItem value="en">EN</MenuItem>
+            <MenuItem value="am">አማ</MenuItem>
+            <MenuItem value="om">OM</MenuItem>
+          </Select>
+          <Button color="inherit" onClick={() => { authStore.clear(); navigate('/login'); }}>{t('buttons.logout')}</Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );

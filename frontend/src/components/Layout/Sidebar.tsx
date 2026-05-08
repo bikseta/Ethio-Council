@@ -1,54 +1,31 @@
-import React from 'react';
-import { AccountTree, Analytics, Church, CrisisAlert, Group, Hub, LocationOn, Public } from '@mui/icons-material';
-import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Box, List, ListItemButton, ListItemText, Paper } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { NavLink } from 'react-router-dom';
 
-const drawerWidth = 260;
+const links = [
+  ['/', 'navigation.dashboard'],
+  ['/churches', 'navigation.churchDirectory'],
+  ['/church-registration', 'navigation.churchRegistration'],
+  ['/gis', 'navigation.gisMap'],
+  ['/analytics', 'navigation.analytics'],
+  ['/diaspora', 'navigation.diasporaPortal'],
+  ['/crisis-response', 'navigation.crisisResponse'],
+] as const;
 
-const navItems = [
-  { text: 'Dashboard', icon: <Analytics />, path: '/dashboard' },
-  { text: 'Church Directory', icon: <Church />, path: '/churches' },
-  { text: 'Register Church', icon: <Church />, path: '/churches/register' },
-  { text: 'Denominations', icon: <Hub />, path: '/denominations' },
-  { text: 'Ministries', icon: <Group />, path: '/ministries' },
-  { text: 'Leaders', icon: <Group />, path: '/leaders' },
-  { text: 'Admin Hierarchy', icon: <AccountTree />, path: '/hierarchy' },
-  { text: 'Diaspora', icon: <Public />, path: '/diaspora' },
-  { text: 'GIS Registration', icon: <LocationOn />, path: '/gis-registration' },
-  { text: 'Crisis Response', icon: <CrisisAlert />, path: '/crisis-response' },
-];
-
-const Sidebar: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
+const Sidebar = () => {
+  const { t } = useTranslation();
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          borderRight: '1px solid rgba(0,0,0,0.08)',
-        },
-      }}
-    >
-      <Toolbar />
-      <List>
-        {navItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => navigate(item.path)}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItemButton>
-        ))}
-      </List>
-    </Drawer>
+    <Paper square sx={{ width: 260, minHeight: '100vh', position: 'fixed', top: 0, left: 0, pt: 9 }}>
+      <Box sx={{ px: 2 }}>
+        <List>
+          {links.map(([to, key]) => (
+            <ListItemButton key={to} component={NavLink} to={to}>
+              <ListItemText primary={t(key)} />
+            </ListItemButton>
+          ))}
+        </List>
+      </Box>
+    </Paper>
   );
 };
 

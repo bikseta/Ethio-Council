@@ -1,33 +1,29 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-}
-
-interface AuthState {
-  user: User | null;
+export type AuthUser = {
   token: string | null;
-  isAuthenticated: boolean;
-  setAuth: (user: User, token: string) => void;
-  logout: () => void;
-}
+  email: string | null;
+  fullName: string | null;
+};
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      setAuth: (user, token) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
-    }),
-    {
-      name: 'ecfe-auth-storage',
+const KEY = 'ecfe_auth';
+
+export const authStore = {
+  get(): AuthUser {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) {
+      return { token: null, email: null, fullName: null };
     }
-  )
-);
+    return JSON.parse(raw) as AuthUser;
+  },
+  set(user: AuthUser) {
+    if (user.token) {
+      localStorage.setItem('ecfe_token', user.token);
+    } else {
+      localStorage.removeItem('ecfe_token');
+    }
+    localStorage.setItem(KEY, JSON.stringify(user));
+  },
+  clear() {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem('ecfe_token');
+  },
+};

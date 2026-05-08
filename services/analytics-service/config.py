@@ -1,20 +1,13 @@
-from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://ecfe_user:ecfe_pass@db:5432/ecfe_db"
-    secret_key: str = "your-secret-key-change-in-production"
-    algorithm: str = "HS256"
-    app_name: str = "ECFE Analytics Service"
+    database_url: str = "postgresql://postgres:changeme@localhost:5434/ethio_council"
+    allowed_origins: str = "http://localhost:3001"
+    log_level: str = "INFO"
 
     class Config:
         env_file = ".env"
 
 
-@lru_cache()
-def get_settings():
-    return Settings()
-
-
-settings = get_settings()
+settings = Settings()

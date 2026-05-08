@@ -1,64 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Box, Card, CardContent, CircularProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { useTranslation } from 'react-i18next';
 
-import { registrationsApi } from '../api/client';
 import ChurchMap from '../components/Map/ChurchMap';
 
-interface Summary {
-  registrations: number;
-  verified: number;
-  pending: number;
-}
-
-interface Registration {
-  id: number;
-  church_id: number;
-  latitude: number;
-  longitude: number;
-  status: string;
-  address?: string;
-}
-
-const GISMap: React.FC = () => {
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    Promise.all([registrationsApi.summary(), registrationsApi.list()])
-      .then(([summaryResponse, registrationsResponse]) => {
-        setSummary(summaryResponse.data);
-        setRegistrations(registrationsResponse.data);
-      })
-      .catch(() => setError('Unable to load GIS registrations.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return <CircularProgress />;
-  }
-
+const GISMap = () => {
+  const { t } = useTranslation();
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>GIS Registration</Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {summary && (
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', mb: 3 }}>
-          {Object.entries(summary).map(([label, value]) => (
-            <Card key={label}><CardContent><Typography variant="h5">{value}</Typography><Typography color="text.secondary">{label}</Typography></CardContent></Card>
-          ))}
-        </Box>
-      )}
-      <ChurchMap markers={registrations.map((item) => ({ id: item.id, latitude: item.latitude, longitude: item.longitude, label: `Church #${item.church_id}` }))} />
-      <List>
-        {registrations.map((item) => (
-          <ListItem key={item.id} divider>
-            <ListItemText primary={`Church #${item.church_id}`} secondary={`${item.address || 'Address unavailable'} • ${item.status}`} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
+    <Stack spacing={3}>
+      <Typography variant="h4">{t('navigation.gisMap')}</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={9}>
+          <ChurchMap />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Map Filters</Typography>
+              <Typography variant="body2">Verified churches</Typography>
+              <Typography variant="body2">Registration density</Typography>
+              <Typography variant="body2">Diaspora-linked churches</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Stack>
   );
 };
 

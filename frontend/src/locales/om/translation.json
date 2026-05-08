@@ -1,30 +1,51 @@
 {
-  "nav": {
-    "home": "Mana",
-    "churches": "Galmee Waldootaa",
-    "register": "Waldaa Galmeessi",
-    "gis": "Kaartaa GIS",
+  "navigation": {
+    "login": "Seeni",
+    "dashboard": "Daashboordii",
+    "churchDirectory": "Galmee Waldaa",
+    "churchRegistration": "Galmee Waldaa Haaraa",
+    "gisMap": "Kaartaa GIS",
     "analytics": "Xiinxala",
-    "diaspora": "Diyyaasporaa",
-    "crisis": "Deebii Balaa"
+    "diasporaPortal": "Poortaala Diyaaspooraa",
+    "crisisResponse": "Deebii Balaa"
   },
-  "church": {
-    "name": "Maqaa Waldaa",
-    "denomination": "Miseensummaa",
-    "members": "Miseensota",
-    "active": "Socho'aa",
-    "inactive": "Hin sochoone"
+  "churchFields": {
+    "name": "Maqaa waldaa",
+    "denomination": "Kutaa mootummaa amantaa",
+    "community": "Hawaasa",
+    "address": "Teessoo",
+    "phone": "Bilbila",
+    "email": "Imeelii",
+    "password": "Jecha iccitii"
   },
-  "auth": {
+  "ministryTypes": {
+    "youth": "Dargaggoota",
+    "women": "Dubartoota",
+    "children": "Daa'imman",
+    "education": "Barnoota",
+    "outreach": "Babal'ina"
+  },
+  "status": {
+    "pending": "Eeggachaa jira",
+    "verified": "Mirkanaa'eera",
+    "active": "Sochii keessa",
+    "resolved": "Furmaata argateera"
+  },
+  "dashboard": {
+    "totalChurches": "Waldaalee waliigalaa",
+    "totalMinistries": "Tajaajiloota waliigalaa",
+    "regionsCovered": "Naannolee haguugaman",
+    "activeCrises": "Balaa hojii irra jiran",
+    "recentActivity": "Sochii dhihoo"
+  },
+  "buttons": {
     "login": "Seeni",
     "logout": "Ba'i",
-    "username": "Maqaa Fayyadamaa",
-    "password": "Jecha Iccitii"
+    "submit": "Ergi",
+    "requestPartnership": "Walii hojii gaafadhu"
   },
-  "common": {
-    "loading": "Fe'aa jira...",
-    "save": "Olkaa'i",
-    "cancel": "Dhiisi",
-    "noData": "Odeeffannoon hin jiru"
+  "placeholders": {
+    "searchChurches": "Waldaa maqaan barbaadi",
+    "loginError": "Odeeffannoo kennameen seenuun hin dandeenye"
   }
 }

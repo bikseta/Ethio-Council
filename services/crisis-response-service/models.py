@@ -1,86 +1,71 @@
-import enum
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum as SAEnum, Text
-from sqlalchemy.orm import relationship
+import uuid
+from datetime import date, datetime
+
+from geoalchemy2 import Geometry
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
 from database import Base
-
-
-class IncidentSeverity(str, enum.Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
-
-
-class IncidentStatus(str, enum.Enum):
-    REPORTED = "REPORTED"
-    ACTIVE = "ACTIVE"
-    CONTAINED = "CONTAINED"
-    RESOLVED = "RESOLVED"
-
-
-class VolunteerStatus(str, enum.Enum):
-    AVAILABLE = "AVAILABLE"
-    DEPLOYED = "DEPLOYED"
-    UNAVAILABLE = "UNAVAILABLE"
 
 
 class Incident(Base):
     __tablename__ = "incidents"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    description = Column(Text)
-    severity = Column(SAEnum(IncidentSeverity), default=IncidentSeverity.MEDIUM)
-    status = Column(SAEnum(IncidentStatus), default=IncidentStatus.REPORTED)
-    location = Column(String(255))
-    latitude = Column(Float)
-    longitude = Column(Float)
-    reported_by = Column(Integer, nullable=False)
-    woreda_id = Column(Integer)
-    affected_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    volunteers = relationship("VolunteerDeployment", back_populates="incident")
-    distributions = relationship("ReliefDistribution", back_populates="incident")
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    incident_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="reported")
+    location: Mapped[str | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    gps_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gps_lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    region_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("regions.id", ondelete="SET NULL"), nullable=True)
+    zone_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("zones.id", ondelete="SET NULL"), nullable=True)
+    woreda_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("woredas.id", ondelete="SET NULL"), nullable=True)
+    affected_population: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reported_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class Volunteer(Base):
     __tablename__ = "volunteers"
-    id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String(255), nullable=False)
-    phone = Column(String(50))
-    email = Column(String(255))
-    skills = Column(Text)
-    church_id = Column(Integer)
-    status = Column(SAEnum(VolunteerStatus), default=VolunteerStatus.AVAILABLE)
-    latitude = Column(Float)
-    longitude = Column(Float)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    deployments = relationship("VolunteerDeployment", back_populates="volunteer")
-
-
-class VolunteerDeployment(Base):
-    __tablename__ = "volunteer_deployments"
-    id = Column(Integer, primary_key=True, index=True)
-    volunteer_id = Column(Integer, ForeignKey("volunteers.id"), nullable=False)
-    incident_id = Column(Integer, ForeignKey("incidents.id"), nullable=False)
-    deployed_at = Column(DateTime, default=datetime.utcnow)
-    released_at = Column(DateTime)
-    notes = Column(Text)
-    volunteer = relationship("Volunteer", back_populates="deployments")
-    incident = relationship("Incident", back_populates="volunteers")
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    skills: Mapped[list[str] | None] = mapped_column(ARRAY(String), default=list)
+    availability: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    region_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("regions.id", ondelete="SET NULL"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class ReliefDistribution(Base):
     __tablename__ = "relief_distributions"
-    id = Column(Integer, primary_key=True, index=True)
-    incident_id = Column(Integer, ForeignKey("incidents.id"), nullable=False)
-    item_name = Column(String(255), nullable=False)
-    quantity = Column(Float, nullable=False)
-    unit = Column(String(50))
-    distributed_to = Column(String(255))
-    distributed_at = Column(DateTime, default=datetime.utcnow)
-    distributed_by = Column(Integer)
-    notes = Column(Text)
-    incident = relationship("Incident", back_populates="distributions")
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    quantity: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    unit: Mapped[str] = mapped_column(String(50), nullable=False)
+    distribution_date: Mapped[date] = mapped_column(Date, nullable=False)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="planned")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class VolunteerDeployment(Base):
+    __tablename__ = "volunteer_deployments"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("incidents.id", ondelete="CASCADE"), nullable=False)
+    volunteer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("volunteers.id", ondelete="CASCADE"), nullable=False)
+    role: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="assigned")
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
