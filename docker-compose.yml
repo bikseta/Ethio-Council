@@ -3,9 +3,9 @@ services:
     image: localstack/localstack:latest
     container_name: ethio-council-localstack
     ports:
-      - "4566:4566"
-      - "4571:4571"
-      - "8056:8080"
+      - "4567:4566"
+      - "4572:4571"
+      - "8057:8080"
     environment:
       - SERVICES=s3,sqs,iam,sts,lambda,cloudwatchlogs
       - DEBUG=1
@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: ethio-council-core-platform
     ports:
-      - "8001:8000"
+      - "8011:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ethio_council}
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-change-in-production}
@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
     container_name: ethio-council-gis-registration
     ports:
-      - "8002:8000"
+      - "8012:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ethio_council}
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-change-in-production}
@@ -83,7 +83,7 @@ services:
       dockerfile: Dockerfile
     container_name: ethio-council-analytics
     ports:
-      - "8003:8000"
+      - "8013:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ethio_council}
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-change-in-production}
@@ -103,7 +103,7 @@ services:
       dockerfile: Dockerfile
     container_name: ethio-council-crisis-response
     ports:
-      - "8004:8000"
+      - "8014:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ethio_council}
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-change-in-production}
@@ -125,10 +125,10 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - REACT_APP_CORE_API_URL=http://localhost:8001
-      - REACT_APP_GIS_API_URL=http://localhost:8002
-      - REACT_APP_ANALYTICS_API_URL=http://localhost:8003
-      - REACT_APP_CRISIS_API_URL=http://localhost:8004
+      - REACT_APP_CORE_API_URL=http://localhost:8011
+      - REACT_APP_GIS_API_URL=http://localhost:8012
+      - REACT_APP_ANALYTICS_API_URL=http://localhost:8013
+      - REACT_APP_CRISIS_API_URL=http://localhost:8014
       - REACT_APP_MAPBOX_TOKEN=${MAPBOX_TOKEN:-your-mapbox-token-here}
     volumes:
       - ./frontend:/app
