@@ -25,8 +25,10 @@ const PrivateLayout = () => {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <Navbar />
-      <Sidebar />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: '260px' }}>
+      <Box component="nav" sx={{ width: 260, flexShrink: 0 }}>
+        <Sidebar />
+      </Box>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default', minHeight: '100vh' }}>
         <Toolbar />
         <Outlet />
       </Box>

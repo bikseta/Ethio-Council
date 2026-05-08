@@ -15,7 +15,7 @@ const links = [
 const Sidebar = () => {
   const { t } = useTranslation();
   return (
-    <Paper square sx={{ width: 260, minHeight: '100vh', position: 'fixed', top: 0, left: 0, pt: 9 }}>
+    <Paper square elevation={2} sx={{ width: 260, minHeight: '100vh', position: 'fixed', top: 0, left: 0, pt: 9, zIndex: 1200 }}>
       <Box sx={{ px: 2 }}>
         <List>
           {links.map(([to, key]) => (

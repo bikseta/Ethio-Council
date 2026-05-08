@@ -9,7 +9,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   return (
-    <AppBar position="sticky" sx={{ zIndex: 1201 }}>
+    <AppBar position="fixed" sx={{ zIndex: 1201 }}>
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Typography variant="h6">ECFE Digital Platform</Typography>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
