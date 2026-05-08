@@ -1,60 +1,54 @@
 import React, { useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useTranslation } from 'react-i18next';
+
 import { authApi } from '../api/client';
-import { useStore } from '../store';
+import { useAuthStore } from '../store/authStore';
 
 const Login: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setAuth } = useStore();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('Admin@2024!');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const response = await authApi.login(email, password);
-      const { access_token, user_role, user_id, full_name } = response.data;
-      setAuth({ token: access_token, userRole: user_role, userId: user_id, fullName: full_name, isAuthenticated: true });
+      const loginResponse = await authApi.login(username, password);
+      const token = loginResponse.data.access_token as string;
+      const meResponse = await authApi.me(token);
+      setAuth(meResponse.data, token);
       navigate('/dashboard');
     } catch {
-      setError(t('auth.loginError'));
+      setError('Unable to sign in with the provided credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Card sx={{ maxWidth: 400, width: '100%', mx: 2 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h4" color="primary" fontWeight={700} textAlign="center" gutterBottom>
-            {t('app.name')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
-            {t('app.tagline')}
+    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: '#F5F7FA', p: 2 }}>
+      <Card sx={{ width: '100%', maxWidth: 460 }}>
+        <CardContent>
+          <Typography variant="h4" gutterBottom>ECFE Platform Login</Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Use the scaffold seed account to access the platform.
           </Typography>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField fullWidth label={t('auth.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} margin="normal" required autoComplete="email" />
-            <TextField fullWidth label={t('auth.password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} margin="normal" required autoComplete="current-password" />
-            <Button fullWidth variant="contained" type="submit" size="large" sx={{ mt: 2 }} disabled={loading}>
-              {loading ? <CircularProgress size={24} color="inherit" /> : t('auth.loginButton')}
+            <TextField fullWidth margin="normal" label="Username" value={username} onChange={(event) => setUsername(event.target.value)} />
+            <TextField fullWidth margin="normal" label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+            <Button fullWidth type="submit" variant="contained" sx={{ mt: 2 }} disabled={loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : 'Sign In'}
             </Button>
           </Box>
+          <Typography variant="caption" color="text.secondary" display="block" mt={2}>
+            Seed credentials: admin / Admin@2024!
+          </Typography>
         </CardContent>
       </Card>
     </Box>

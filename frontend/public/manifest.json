@@ -1,6 +1,6 @@
 {
-  "short_name": "Ethio-Council",
-  "name": "ECFE National Digital Platform",
+  "short_name": "ECFE",
+  "name": "ECFE Digital Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -11,5 +11,5 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#1565C0",
-  "background_color": "#ffffff"
+  "background_color": "#FFFFFF"
 }

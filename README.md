@@ -1,29 +1,44 @@
 # Ethio-Council — ECFE Digital Platform
 
-National Digital Platform for the **Evangelical Churches Fellowship of Ethiopia (ECFE)**.
+Digital scaffold for the **Evangelical Churches Fellowship of Ethiopia (ECFE)** platform.
 
 ## Services
 
 | Service | Port | Description |
 |---------|------|-------------|
-| core-platform-service | 8001 | Auth, members, churches, admin |
-| gis-service | 8002 | Geographic data & mapping |
-| analytics-service | 8003 | Reports & analytics |
-| crisis-service | 8004 | Crisis & emergency management |
-| frontend | 3000 | React 19 + MUI web app |
-| postgres | 5434 | PostGIS database |
+| core-platform-service | 8000 | Authentication, churches, ministries, denominations, leaders, hierarchy, diaspora |
+| gis-registration-service | 8001 | GIS-based field registration and geo metadata |
+| crisis-response-service | 8002 | Incident, volunteer, and relief coordination |
+| analytics-service | 8003 | Platform analytics and dashboard aggregation |
+| frontend | 3001 | React + TypeScript management portal |
+| db | 5432 | PostgreSQL 15 shared datastore |
 
 ## Quick Start
 
 ```bash
 cp .env.example .env
-# Edit .env and set POSTGRES_PASSWORD and SECRET_KEY
-make setup
+docker-compose up --build
 ```
 
-## Tech Stack
+## Seed Login
 
-- **Backend**: FastAPI + SQLAlchemy 2.0 + Alembic + PostGIS
-- **Frontend**: React 19 + TypeScript + MUI + Mapbox GL + i18next (EN/AM/OM)
-- **Database**: PostgreSQL 15 + PostGIS 3.4
-- **Container**: Docker Compose
+- **Username:** `admin`
+- **Email:** `admin@ecfe.org`
+- **Password:** `Admin@2024!`
+
+## Core API Areas
+
+- `/api/v1/auth`
+- `/api/v1/churches`
+- `/api/v1/ministries`
+- `/api/v1/denominations`
+- `/api/v1/leaders`
+- `/api/v1/hierarchy`
+- `/api/v1/diaspora`
+
+## Service Directories
+
+- `services/core-platform-service`
+- `services/gis-registration-service`
+- `services/analytics-service`
+- `services/crisis-response-service`

@@ -1,157 +1,127 @@
+version: '3.8'
+
 services:
-  # PostgreSQL with PostGIS
-  postgres:
-    image: postgis/postgis:15-3.4-alpine
-    container_name: ethio-council-postgres
+  db:
+    image: postgres:15
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ethio_council}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
-    ports:
-      - "5434:5432"
+      POSTGRES_USER: ecfe_user
+      POSTGRES_PASSWORD: ecfe_pass
+      POSTGRES_DB: ecfe_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
     networks:
       - ethio-council-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ethio_council}"]
+      test: ["CMD-SHELL", "pg_isready -U ecfe_user -d ecfe_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Core Platform Service
-  core-platform-service:
-    build:
-      context: ./services/core-platform-service
-      dockerfile: Dockerfile
-    container_name: ethio-council-core
-    ports:
-      - "8001:8000"
+  localstack:
+    image: localstack/localstack:latest
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ethio_council}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SERVICES=s3
+      - DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+    ports:
+      - "4566:4566"
+    networks:
+      - ethio-council-network
+
+  core-platform-service:
+    build: ./services/core-platform-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ecfe_user:ecfe_pass@db:5432/ecfe_db
+      - SECRET_KEY=${SECRET_KEY:-ecfe-dev-secret-key-2024}
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - FRONTEND_URL=http://localhost:3001
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
+      localstack:
+        condition: service_started
     networks:
       - ethio-council-network
     volumes:
       - ./services/core-platform-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
-  # GIS Service
-  gis-service:
-    build:
-      context: ./services/gis-service
-      dockerfile: Dockerfile
-    container_name: ethio-council-gis
+  gis-registration-service:
+    build: ./services/gis-registration-service
     ports:
-      - "8002:8000"
+      - "8001:8001"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ethio_council}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=postgresql://ecfe_user:ecfe_pass@db:5432/ecfe_db
+      - SECRET_KEY=${SECRET_KEY:-ecfe-dev-secret-key-2024}
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
+      localstack:
+        condition: service_started
     networks:
       - ethio-council-network
     volumes:
-      - ./services/gis-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - ./services/gis-registration-service:/app
 
-  # Analytics Service
-  analytics-service:
-    build:
-      context: ./services/analytics-service
-      dockerfile: Dockerfile
-    container_name: ethio-council-analytics
+  crisis-response-service:
+    build: ./services/crisis-response-service
     ports:
-      - "8003:8000"
+      - "8002:8002"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ethio_council}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=postgresql://ecfe_user:ecfe_pass@db:5432/ecfe_db
+      - SECRET_KEY=${SECRET_KEY:-ecfe-dev-secret-key-2024}
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
     depends_on:
-      postgres:
+      db:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+    networks:
+      - ethio-council-network
+    volumes:
+      - ./services/crisis-response-service:/app
+
+  analytics-service:
+    build: ./services/analytics-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://ecfe_user:ecfe_pass@db:5432/ecfe_db
+      - SECRET_KEY=${SECRET_KEY:-ecfe-dev-secret-key-2024}
+    depends_on:
+      db:
         condition: service_healthy
     networks:
       - ethio-council-network
     volumes:
       - ./services/analytics-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
-  # Crisis Service
-  crisis-service:
-    build:
-      context: ./services/crisis-service
-      dockerfile: Dockerfile
-    container_name: ethio-council-crisis
-    ports:
-      - "8004:8000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ethio_council}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - ethio-council-network
-    volumes:
-      - ./services/crisis-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # React Frontend
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ethio-council-frontend
+    build: ./frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
-      - REACT_APP_CORE_API_URL=${REACT_APP_CORE_API_URL:-http://localhost:8001}
-      - REACT_APP_GIS_API_URL=${REACT_APP_GIS_API_URL:-http://localhost:8002}
-      - REACT_APP_ANALYTICS_API_URL=${REACT_APP_ANALYTICS_API_URL:-http://localhost:8003}
-      - REACT_APP_CRISIS_API_URL=${REACT_APP_CRISIS_API_URL:-http://localhost:8004}
-      - REACT_APP_MAPBOX_TOKEN=${REACT_APP_MAPBOX_TOKEN:-your_token_here}
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - REACT_APP_CORE_API_URL=http://localhost:8000
+      - REACT_APP_GIS_API_URL=http://localhost:8001
+      - REACT_APP_CRISIS_API_URL=http://localhost:8002
+      - REACT_APP_ANALYTICS_API_URL=http://localhost:8003
+      - REACT_APP_MAPBOX_TOKEN=${MAPBOX_TOKEN:-}
     depends_on:
       - core-platform-service
+      - gis-registration-service
+      - crisis-response-service
+      - analytics-service
     networks:
       - ethio-council-network
 

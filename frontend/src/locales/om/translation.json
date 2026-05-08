@@ -1,65 +1,30 @@
 {
-  "app": {
-    "name": "Ethio-Kaawunsil",
-    "tagline": "Sagantaa Dijitaalaa Biyyoolessaa ECFE"
-  },
   "nav": {
-    "dashboard": "Dashboordii",
+    "home": "Mana",
+    "churches": "Galmee Waldootaa",
+    "register": "Waldaa Galmeessi",
+    "gis": "Kaartaa GIS",
+    "analytics": "Xiinxala",
+    "diaspora": "Diyyaasporaa",
+    "crisis": "Deebii Balaa"
+  },
+  "church": {
+    "name": "Maqaa Waldaa",
+    "denomination": "Miseensummaa",
     "members": "Miseensota",
-    "churches": "Waldaalee",
-    "reports": "Gabaasota",
-    "map": "Kaartaa",
-    "admin": "Bulchiinsa",
-    "logout": "Ba'i"
+    "active": "Socho'aa",
+    "inactive": "Hin sochoone"
   },
   "auth": {
     "login": "Seeni",
-    "email": "Teessoo Imeelii",
-    "password": "Jecha Iccitii",
-    "loginButton": "Seeni",
-    "loginError": "Imeelii ykn jecha iccitii dogoggoraa dha"
-  },
-  "dashboard": {
-    "title": "Dashboordii",
-    "totalMembers": "Miseensota Guutuu",
-    "totalChurches": "Waldaalee Guutuu",
-    "totalDenominations": "Waldaalee Kiristaanaa",
-    "openCrisisReports": "Gabaasa Rakkoo Banaa"
-  },
-  "members": {
-    "title": "Miseensota",
-    "addMember": "Miseensa Dabaluu",
-    "fullName": "Maqaa Guutuu",
-    "gender": "Saala",
-    "phone": "Bilbila",
-    "status": "Haala",
-    "church": "Waldaa"
-  },
-  "churches": {
-    "title": "Waldaalee",
-    "addChurch": "Waldaa Dabaluu",
-    "name": "Maqaa Waldaa",
-    "denomination": "Miseensummaa Waldaa",
-    "pastor": "Paastera",
-    "memberCount": "Miseensota"
-  },
-  "crisis": {
-    "title": "Gabaasa Rakkoo",
-    "newReport": "Gabaasa Haaraa",
-    "severity": "Hamina",
-    "status": "Haala",
-    "affected": "Miidhamtoota",
-    "open": "Banaa",
-    "resolved": "Hiikame"
+    "logout": "Ba'i",
+    "username": "Maqaa Fayyadamaa",
+    "password": "Jecha Iccitii"
   },
   "common": {
-    "save": "Olkaa'i",
-    "cancel": "Haquu",
-    "delete": "Balleessi",
-    "edit": "Gulaali",
-    "search": "Barbaadi",
     "loading": "Fe'aa jira...",
-    "error": "Dogoggorri uumame",
-    "noData": "Odeeffannoo hin jiru"
+    "save": "Olkaa'i",
+    "cancel": "Dhiisi",
+    "noData": "Odeeffannoon hin jiru"
   }
 }

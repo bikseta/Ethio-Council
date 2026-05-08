@@ -1,63 +1,71 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
-import { StoreContext, AuthState } from './store';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Members from './pages/Members';
-import Churches from './pages/Churches';
-import Reports from './pages/Reports';
-import Map from './pages/Map';
-import Layout from './components/Layout';
+import React from 'react';
+import { BrowserRouter as Router, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Box, ThemeProvider, createTheme } from '@mui/material';
+
+import Navbar from './components/Layout/Navbar';
+import Sidebar from './components/Layout/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminHierarchy from './pages/AdminHierarchy';
+import Analytics from './pages/Analytics';
+import ChurchDirectory from './pages/ChurchDirectory';
+import ChurchRegistration from './pages/ChurchRegistration';
+import CrisisResponse from './pages/CrisisResponse';
+import Denominations from './pages/Denominations';
+import DiasporaPortal from './pages/DiasporaPortal';
+import GISMap from './pages/GISMap';
+import Leaders from './pages/Leaders';
+import Login from './pages/Login';
+import Ministries from './pages/Ministries';
+import NotFound from './pages/NotFound';
 
-function App() {
-  const [auth, setAuthState] = useState<AuthState>({
-    token: localStorage.getItem('access_token'),
-    userId: localStorage.getItem('user_id'),
-    userRole: localStorage.getItem('user_role'),
-    fullName: localStorage.getItem('full_name'),
-    isAuthenticated: !!localStorage.getItem('access_token'),
-  });
+const theme = createTheme({
+  palette: {
+    primary: { main: '#1565C0' },
+    secondary: { main: '#2E7D32' },
+    background: { default: '#F5F7FA' },
+  },
+});
 
-  const setAuth = (newAuth: Partial<AuthState>) => {
-    const updated = { ...auth, ...newAuth };
-    setAuthState(updated);
-    if (newAuth.token) localStorage.setItem('access_token', newAuth.token);
-    if (newAuth.userId) localStorage.setItem('user_id', newAuth.userId);
-    if (newAuth.userRole) localStorage.setItem('user_role', newAuth.userRole);
-    if (newAuth.fullName) localStorage.setItem('full_name', newAuth.fullName);
-  };
+const AppShell: React.FC = () => (
+  <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Sidebar />
+    <Box sx={{ flex: 1, ml: '260px' }}>
+      <Navbar />
+      <Box component="main" sx={{ p: 3 }}>
+        <Outlet />
+      </Box>
+    </Box>
+  </Box>
+);
 
-  const logout = () => {
-    localStorage.clear();
-    setAuthState({ token: null, userId: null, userRole: null, fullName: null, isAuthenticated: false });
-  };
-
+const App: React.FC = () => {
   return (
-    <StoreContext.Provider value={{ auth, setAuth, logout }}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/members" element={<Members />} />
-                <Route path="/churches" element={<Churches />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/map" element={<Map />} />
-              </Route>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Analytics />} />
+              <Route path="/churches" element={<ChurchDirectory />} />
+              <Route path="/churches/register" element={<ChurchRegistration />} />
+              <Route path="/denominations" element={<Denominations />} />
+              <Route path="/ministries" element={<Ministries />} />
+              <Route path="/leaders" element={<Leaders />} />
+              <Route path="/hierarchy" element={<AdminHierarchy />} />
+              <Route path="/diaspora" element={<DiasporaPortal />} />
+              <Route path="/gis-registration" element={<GISMap />} />
+              <Route path="/gis" element={<Navigate to="/gis-registration" replace />} />
+              <Route path="/crisis-response" element={<CrisisResponse />} />
+              <Route path="/crisis" element={<Navigate to="/crisis-response" replace />} />
             </Route>
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </StoreContext.Provider>
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;

@@ -1,77 +1,77 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
-const CORE_API_URL = process.env.REACT_APP_CORE_API_URL || 'http://localhost:8001';
-const GIS_API_URL = process.env.REACT_APP_GIS_API_URL || 'http://localhost:8002';
-const ANALYTICS_API_URL = process.env.REACT_APP_ANALYTICS_API_URL || 'http://localhost:8003';
-const CRISIS_API_URL = process.env.REACT_APP_CRISIS_API_URL || 'http://localhost:8004';
+const coreApiUrl = process.env.REACT_APP_CORE_API_URL || 'http://localhost:8000';
+const gisApiUrl = process.env.REACT_APP_GIS_API_URL || 'http://localhost:8001';
+const crisisApiUrl = process.env.REACT_APP_CRISIS_API_URL || 'http://localhost:8002';
+const analyticsApiUrl = process.env.REACT_APP_ANALYTICS_API_URL || 'http://localhost:8003';
 
-function createClient(baseURL: string): AxiosInstance {
-  const client = axios.create({ baseURL });
-  client.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
+export const coreApi = axios.create({ baseURL: coreApiUrl });
+export const gisApi = axios.create({ baseURL: gisApiUrl });
+export const crisisApi = axios.create({ baseURL: crisisApiUrl });
+export const analyticsApi = axios.create({ baseURL: analyticsApiUrl });
+
+[coreApi, gisApi, crisisApi, analyticsApi].forEach((api) => {
+  api.interceptors.request.use((config) => {
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   });
-  client.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.href = '/login';
-      }
-      return Promise.reject(error);
-    }
-  );
-  return client;
-}
+});
 
-export const coreClient = createClient(CORE_API_URL);
-export const gisClient = createClient(GIS_API_URL);
-export const analyticsClient = createClient(ANALYTICS_API_URL);
-export const crisisClient = createClient(CRISIS_API_URL);
-
-// Auth API
 export const authApi = {
-  login: (email: string, password: string) =>
-    coreClient.post('/api/v1/auth/login', { email, password }),
-  me: () => coreClient.get('/api/v1/auth/me'),
+  login: (username: string, password: string) =>
+    coreApi.post('/api/v1/auth/login', new URLSearchParams({ username, password }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    }),
+  me: (token?: string) =>
+    coreApi.get('/api/v1/auth/me', token ? { headers: { Authorization: `Bearer ${token}` } } : undefined),
 };
 
-// Members API
-export const membersApi = {
-  list: (params?: Record<string, unknown>) => coreClient.get('/api/v1/members/', { params }),
-  get: (id: string) => coreClient.get(`/api/v1/members/${id}`),
-  create: (data: Record<string, unknown>) => coreClient.post('/api/v1/members/', data),
-  delete: (id: string) => coreClient.delete(`/api/v1/members/${id}`),
-};
-
-// Churches API
 export const churchesApi = {
-  list: (params?: Record<string, unknown>) => coreClient.get('/api/v1/churches/', { params }),
-  get: (id: string) => coreClient.get(`/api/v1/churches/${id}`),
-  create: (data: Record<string, unknown>) => coreClient.post('/api/v1/churches/', data),
-  denominations: () => coreClient.get('/api/v1/churches/denominations'),
+  list: () => coreApi.get('/api/v1/churches/'),
+  create: (payload: Record<string, unknown>) => coreApi.post('/api/v1/churches/', payload),
 };
 
-// Analytics API
-export const analyticsApi = {
-  summary: () => analyticsClient.get('/api/v1/analytics/summary'),
-  growth: (period?: string) => analyticsClient.get('/api/v1/analytics/growth', { params: { period } }),
+export const denominationsApi = {
+  list: () => coreApi.get('/api/v1/denominations/'),
 };
 
-// Crisis API
-export const crisisApi = {
-  list: (params?: Record<string, unknown>) => crisisClient.get('/api/v1/crisis/alerts', { params }),
-  create: (data: Record<string, unknown>) => crisisClient.post('/api/v1/crisis/alerts', data),
-  acknowledge: (id: string) => crisisClient.patch(`/api/v1/crisis/alerts/${id}/acknowledge`),
-  dashboard: () => crisisClient.get('/api/v1/crisis/dashboard'),
+export const ministriesApi = {
+  list: () => coreApi.get('/api/v1/ministries/'),
 };
 
-// GIS API
-export const gisApi = {
-  churches: (params?: Record<string, unknown>) => gisClient.get('/api/v1/gis/churches/geojson', { params }),
-  crisis: (params?: Record<string, unknown>) => gisClient.get('/api/v1/gis/crisis/geojson', { params }),
-  regions: () => gisClient.get('/api/v1/gis/regions/geojson'),
+export const leadersApi = {
+  list: () => coreApi.get('/api/v1/leaders/'),
+};
+
+export const hierarchyApi = {
+  summary: () => coreApi.get('/api/v1/hierarchy/summary'),
+  regions: () => coreApi.get('/api/v1/hierarchy/regions'),
+  zones: () => coreApi.get('/api/v1/hierarchy/zones'),
+  woredas: () => coreApi.get('/api/v1/hierarchy/woredas'),
+  kebeles: () => coreApi.get('/api/v1/hierarchy/kebeles'),
+};
+
+export const diasporaApi = {
+  communities: () => coreApi.get('/api/v1/diaspora/communities'),
+  partnerships: () => coreApi.get('/api/v1/diaspora/partnerships'),
+};
+
+export const registrationsApi = {
+  summary: () => gisApi.get('/api/v1/summary'),
+  list: () => gisApi.get('/api/v1/registrations'),
+};
+
+export const crisisPortalApi = {
+  summary: () => crisisApi.get('/api/v1/summary'),
+  incidents: () => crisisApi.get('/api/v1/incidents'),
+  volunteers: () => crisisApi.get('/api/v1/volunteers'),
+  distributions: () => crisisApi.get('/api/v1/distributions'),
+};
+
+export const analyticsPortalApi = {
+  dashboard: () => analyticsApi.get('/api/v1/analytics/dashboard'),
 };
