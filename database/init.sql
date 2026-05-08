@@ -262,5 +262,5 @@ INSERT INTO denominations (name, abbreviation, founded_year, headquarters_region
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO users (email, username, password_hash, full_name, role, is_active, is_verified, language_preference)
-VALUES ('admin@ecfe.org', 'admin', '$2b$12$y5Cd5/Dydt.KL.f33vS8ieekBVRzEtCXFtHz4Bzdk1uDt0p6VS4/S', 'ECFE Platform Administrator', 'SUPER_ADMIN', TRUE, TRUE, 'en')
+VALUES ('admin@ecfe.org', 'admin', '$2b$12$9dPWeMmShRj6iOjA2sfscugAse09og9JI1wTjRAK.T1opeCUwMWNm', 'ECFE Platform Administrator', 'SUPER_ADMIN', TRUE, TRUE, 'en')
 ON CONFLICT (email) DO NOTHING;
